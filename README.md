@@ -21,10 +21,8 @@ The game runs for `GAME_RUN_TIME_SEC` seconds, then prints a statistics summary.
 
 **Manual (Linux):**
 ```bash
-g++ grid.cpp entity.cpp plate.cpp game.cpp pitcher.cpp \
-    game_statistics.cpp rocket.cpp score_calculator.cpp main.cpp \
-    -I$(pwd)/include -lpthread -std=c++20 -o iron_dome_game
-./iron_dome_game
+g++ grid.cpp entity.cpp cannon.cpp plate.cpp rocket.cpp game.cpp pitcher.cpp game_statistics.cpp score_calculator.cpp main.cpp -I$(pwd)/include -lpthread -std=c++20 -o iron_dome_game
+
 ```
 
 **Build File:** Provided build file
