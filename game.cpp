@@ -1,15 +1,9 @@
 #include <iostream>
+#include <string>
 #include <random>
 #include <cstdlib>
 #include <memory>
 #include <cmath>
-
-#ifdef _WIN32
-#include <conio.h>
-#else
-#include <termios.h>
-#include <unistd.h>
-#endif
 
 #include "game.hpp"
 #include "cannon.hpp"
@@ -31,34 +25,9 @@ Game::Game()
 
 void Game::keyboardListener()
 {
-    // Polling approach so the thread exits cleanly when gameIsActive goes false.
-#ifdef _WIN32
-    while (gameIsActive) {
-        if (_kbhit()) {
-            int c = _getch();
-            if (c == '\r') isShotFired = true;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(GAME_TICK_MS));
-    }
-#else
-    // Raw mode with VMIN=0 so read() returns immediately without blocking on input.
-    struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    newt.c_cc[VMIN]  = 0;
-    newt.c_cc[VTIME] = 0;
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    while (gameIsActive) {
-        char c;
-        if (read(STDIN_FILENO, &c, 1) > 0 && c == '\n')
-            isShotFired = true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(GAME_TICK_MS));
-    }
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-#endif
+    std::string line;
+    while (gameIsActive && std::getline(std::cin, line))
+        isShotFired = true;
 }
 
 //============================================================================//
@@ -146,11 +115,7 @@ void Game::play()
         if (std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - lastTimeRefreshed).count() > RENDER_INTERVAL_MS)
         {
-#ifdef _WIN32
-            system("cls");
-#else
             system("clear");
-#endif
             grid.refresh();
             grid.draw();
             lastTimeRefreshed = std::chrono::steady_clock::now();
@@ -184,7 +149,7 @@ void Game::play()
 
     std::cout << "\n=== Game Over ===\n";
     std::cout << statistics.getFormattedStats() << "\n";
-    keyboardThread.join();
+    keyboardThread.detach();
 }
 
 //============================================================================//
